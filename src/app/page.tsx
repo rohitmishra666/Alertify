@@ -7,6 +7,18 @@ export default function Home() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setNotificationPermission(Notification.permission);
     }
@@ -21,9 +33,11 @@ export default function Home() {
 
   const sendNotification = () => {
     if (notificationPermission === 'granted') {
-      new Notification('Custom Notification Title', {
-        body: 'This is a custom notification message.',
-        icon: '/icon512_maskable.png',
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification('Custom Notification Title', {
+          body: 'This is a custom notification message.',
+          icon: '/icon512_maskable.png',
+        });
       });
     } else {
       console.log('Notification permission is not granted.');
@@ -39,7 +53,7 @@ export default function Home() {
         <div className="w-full max-w-[392px] h-[392px] relative flex items-center justify-center mx-auto">
           <div className="w-full h-full relative flex items-center justify-center">
             <Image
-              className="w-auto h-auto object-contain scale-[1.051]"
+              className="w-full h-full object-contain scale-[1.051]"
               alt="Background"
               src="/error-msgillustration.svg"
               layout="fill"
@@ -47,7 +61,7 @@ export default function Home() {
           </div>
           <div className="absolute top-[145px] w-[95px] h-[102.1px] flex items-center justify-center">
             <Image
-              className="scale-[2.000] border-1 w-auto h-auto"
+              className="scale-[2.000] border-1"
               loading="lazy"
               alt="Notification Icon"
               src="/vector.svg"
